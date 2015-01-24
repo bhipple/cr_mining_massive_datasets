@@ -8,8 +8,46 @@ Map(k, v) -> <k', v'>*
     5 word sequence:
         Same (k,v)
     Emits <5 word sequence, 1> from document
+Group by key
+    Sort the keys
 Reduce(k', <v'>*) -> (k', <v''>*)
     One Reduce call per unique key k'
     All values v' with the same key k' are reduced together to form the new pair <k', v''>*
     Word count example:
         For each key k', count the number of v' values associated with it.
+
+
+Distributed System Details:
+---------------------------
+Process Description
+    We may have many map nodes. When map nodes emit their values, they decide which
+    reduce node to send each particular <k', v'>* pair to by running it through
+    a partitioning function (hashing).
+
+    Input and final output are stored on the distributed file system (DFS)
+
+    The map reducing framework tries to schedule map jobs for chunks on the same chunk server,
+    to avoid costly data transfers.
+
+    Whenever possible, intermediate results are stored on the local FS of map and reduce workers
+
+    The output of a MapReduce task is often input to another MapReduce task
+
+Rules of thumb for selecting M and R, the number of Map and Reduce tasks:
+    Make M much larger than the number of nodes in the cluster
+        This way each task is small, so if a node fails and we have (M-1) nodes available, one node won't have to do 2x the work!
+    One DFS chunk per map
+
+    R is usually smaller than M
+
+Combiners and Partition Functions
+---------------------------------
+If the framework allows it and the programmer provides a combiner, then
+    it can be used to aggregate some results in the mapper
+
+combine(k, list(v1)) -> (k, v2)
+    Usually, the combiner is the same function as the Reducer
+    Combiner trick works ONLY IF reduce function is commutative and associative
+
+partition(hashFunction, R)
+    Instead of using the default hash function, we may want to do something else to ensure all the values we care about go to the same Reducer
