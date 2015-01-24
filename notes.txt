@@ -51,3 +51,60 @@ combine(k, list(v1)) -> (k, v2)
 
 partition(hashFunction, R)
     Instead of using the default hash function, we may want to do something else to ensure all the values we care about go to the same Reducer
+
+
+Analysis of Large Graphs
+------------------------
+Page rank through stochastic adjacency matrices
+    Power iteration: start with a guess for r, then keep multiplying r = r * M until the epsilon change in r is sufficiently small
+
+This finds a stationary distribution for a random walk through the graph.
+    That is, the probability of a surfer being at any given node at time t+1 is equal
+    to the probability of a surfer being at any given node at time t
+
+Random walks are called First Order Markov Processes
+    For certain graphs, there is a unique stationary distribution and will eventually
+    be reached for any initial probability distribution at time t = 0
+
+On the page rank algorithm,
+    Does r = Mr converge?
+        The "Spider Trap" problem
+            Characterized by a group in which all out-links are to other members of the group
+            Nodes a and b just keep swapping their values back and forth indefinitely
+            Eventually, a spider trap will absorb all importance in the group
+        The "Dead End" problem
+            Characterized by a page with no out-links
+            A dead end b gets all of a's value, and then in the next iteration it has nowhere to pass it and the value gets lossed
+            These cause importance "leaks"
+    Random Teleports Solution for Spider Traps
+        At each step, with probability B, will follow a random link
+        With probability (1-B), will jump to some random page
+        Commonly run with B in the range .8 to .9
+    Random Teleports for Dead Ends
+        If a node has out degree 0, it has a probability 1 to teleport to a random node
+
+    Theory of Markov Chains:
+        For any start vector, the power method applied to a Markov transition matrix P will converge to a unique positive stationary vector as long as P is stochastic, irreducible, and aperiodic.
+
+        Stochastic Matrix
+            Requires that each column sums to 1
+            By adding random teleports to nodes with out degree 0, we create this propertyu
+
+        Periodic
+            A chain is periodic if there exists k > 1 such that the interval between two visits to some state s is always a multiple of k
+            Because every node has a random teleport chance, we break deterministic periodic cycles
+
+        Irreducible Matrix
+            From any state, there is a non-zero probability of going from any one state to any other
+
+    Implementation
+        Input: Graph G and parameter Beta
+        Assume the graph G has both spider traps and dead ends
+
+        do:
+            For all nodes, set them to the sum of weighted contributions from their in-links, times beta
+            Then re-insert the leaked PageRank:
+            For all nodes, r = r + (1 - S) / N, wheer S is the sum of all r on the column (whatever less than 1 was leaked by (1-B) or dead ends)
+                This takes care of leak from dead ends and from not calculating the teleports explicitly
+        while:
+            The sum of differences in |r(t) - r(t-1)| < epsilon
