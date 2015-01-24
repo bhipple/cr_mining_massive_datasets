@@ -1,0 +1,15 @@
+Map Reduce
+----------
+Map(k, v) -> <k', v'>*
+    One Map call for every (k,v) input pair
+    Word count example:
+        (k,v) is (document name, document contents)
+        It then emits to <word, 1> for every word in the document
+    5 word sequence:
+        Same (k,v)
+    Emits <5 word sequence, 1> from document
+Reduce(k', <v'>*) -> (k', <v''>*)
+    One Reduce call per unique key k'
+    All values v' with the same key k' are reduced together to form the new pair <k', v''>*
+    Word count example:
+        For each key k', count the number of v' values associated with it.
