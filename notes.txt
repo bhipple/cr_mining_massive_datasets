@@ -56,7 +56,7 @@ partition(hashFunction, R)
 Analysis of Large Graphs
 ------------------------
 Page rank through stochastic adjacency matrices
-    Power iteration: start with a guess for r, then keep multiplying r = r * M until the epsilon change in r is sufficiently small
+Page    Power iteration: start with a guess for r, then keep multiplying r = r * M until the epsilon change in r is sufficiently small
 
 This finds a stationary distribution for a random walk through the graph.
     That is, the probability of a surfer being at any given node at time t+1 is equal
@@ -104,7 +104,7 @@ On the page rank algorithm,
         do:
             For all nodes, set them to the sum of weighted contributions from their in-links, times beta
             Then re-insert the leaked PageRank:
-            For all nodes, r = r + (1 - S) / N, wheer S is the sum of all r on the column (whatever less than 1 was leaked by (1-B) or dead ends)
+            For all nodes, r = r + (1 - S) / N, where S is the sum of all r on the column (whatever less than 1 was leaked by (1-B) or dead ends)
                 This takes care of leak from dead ends and from not calculating the teleports explicitly
         while:
             The sum of differences in |r(t) - r(t-1)| < epsilon
