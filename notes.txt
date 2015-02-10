@@ -108,3 +108,13 @@ On the page rank algorithm,
                 This takes care of leak from dead ends and from not calculating the teleports explicitly
         while:
             The sum of differences in |r(t) - r(t-1)| < epsilon
+
+
+Locality Sensitive Hashing
+--------------------------
+We break up the document into a set of k-grams, where each k-gram is a contiguous sequence of k letters
+These are called shingles, and if k is relatively large (say 5 to 10), it will be the case that
+similar documents share a relatively large number of shingles.  We may also hash these shingles into
+4 bytes to compress them, and refer to them as tokens.
+
+We then apply minhashing on the shingles|tokens.
