@@ -110,11 +110,183 @@ On the page rank algorithm,
             The sum of differences in |r(t) - r(t-1)| < epsilon
 
 
-Locality Sensitive Hashing
---------------------------
+Shingles
+--------
 We break up the document into a set of k-grams, where each k-gram is a contiguous sequence of k letters
 These are called shingles, and if k is relatively large (say 5 to 10), it will be the case that
 similar documents share a relatively large number of shingles.  We may also hash these shingles into
 4 bytes to compress them, and refer to them as tokens.
 
 We then apply minhashing on the shingles|tokens.
+
+Minhashing
+----------
+We will use the Jacard similarity function to measure set similarity: (size of intersection / size of union)
+Convert the shingle bags into a boolean matrix:
+    Each row is an element from the universal set of k-shingles
+    Each column is a set, with a 1 at index (i, j) if set j has shingle i
+    We want to find similar columns
+
+    Let's say we have the rows randomly permuted
+    Let the minhash function h(C) = the number of the first row of the randomly permuted ordering in which column C has 1
+    We will create a signature for each column using a number of such independent minhash functions (say, 100)
+
+    It turns out that the probability over all permutations of the rows that h(C1) == h(C2) is the same as
+    JacardSim(C1, C2). Therefore, the similarity of signatures is the fraction of the minhash functions
+    in which they agree.
+
+    Process:
+    1) Take the boolean input matrix
+    2) For each one of a large number of random permutations,
+    3) Calculate the Signature Matrix M, in which each row is the minhash of all columns on a given permutation,
+        i.e., M(i, j) = the first row where column j had a 1 in permutation i
+    4) To look at the similarity of two columns, we look at the number of elements they share in common
+
+Doing actual permutations is too expensive, so we simulate it
+We pick, say, 100 hash functions for each minhash that we want to simulate
+
+For each column c and each hash function h_i, keep a "slot" M(i, c)
+The intent is that M(i, c) will become the smallest value of h_i(r) for which column c has 1 in row r
+That is, h_i(r) gives order of rows for the ith permutation
+
+for each row r:
+    for each hash function h_i:
+        compute h_i(r)
+    for each column c:
+        if c has 1 in row r:
+            for each hash function h_i:
+                M(i, c) = min(M(i, c), h_i(r)
+
+Locality Sensitive Hashing
+--------------------------
+Idea: we take a collection of all elements and want to generate a list of candidate pairs whose similarity
+must be evaluated
+
+For signature matrices, we hash columns to many buckets and make elements of the same bucket candidate pairs
+
+First, we pick a simularity threshold t in (0, 1) that describes what fraction of rows need to be the same
+Then, we will hash columns of the signature matrix M several times such that similar columns get similar hash bucket values
+
+
+Nearest Neighbor Machine Learning
+---------------------------------
+We need 4 things to make a nearest neighbor classifier:
+    1) Distance metric?
+    2) How many nearest neighbors k will we look at?
+    3) (Optional) Function for weighting nearest k neighbors?
+    4) How to fit with the k local points?  For example, if k == 1, then we just
+        set our prediction to be equal to the nearest neighbor, but otherwise we
+        may need to combine them in some way to make our classification
+
+Using locality sensitive hashing
+The goal: We have a set of points P, which are labeled (classified).
+    When an unknown point q comes in, we want to:
+    1) Find the k nearest neighbors to q, using our distance metric
+        This can be done in near-constant time with locality sensitive hashing
+    2) Apply our weighting function and analyze the points to classify q
+
+The Market-Basket Model
+    Given a large set of items, and a large set of baskets containing one or more items from the set of items,
+    find items that are frequently in the same basket.
+
+    A "support" for itemset I is the number of buckets containing all items in I
+
+    An association rule is a rule saying that if a basket contains items i1, i2, ..., in, then it
+    likely also contains item j with some confidence p
+
+Approaches to organization of main memory for counting pairs
+    Assume an integer takes 4 bytes
+    Triangular Matrix Approach
+        Two dimensional array where where A[i][j] only exists if i < j
+        Requries 4 bytes per pair of items
+        Number the items by consecutive integers starting at 1, with a separate hash table that translates from original name -> incremental integer name
+        Cout all {i, j} such that i < j
+        Keep pairs in the order {1,2}, {1,3}, ... , {1,n}, {2,3}, {2,4}, ... , {2,n}
+
+        Thus what we have is really a 1-dimensional array, and we can use the function
+            f(i, j) = (i - 1) * (n - i/2) + j - i
+        to map from the matrix position to the pair in the array.
+
+        There are n choose 2 pairs ~= n^2/2 pairs
+        We use 4 bytes per pair, so we need 2n^2 bytes
+
+    Keep a hash table of trios [i, j] -> c, where c is the current count of the items
+        Requires 12 bytes per pair, but only if the pair exists
+
+A priori:
+    Monotonicity: If a set of items appears at least s times, then so does every subset of s
+
+    This allows us to make successive passes, starting with a set of frequent tuples of size
+    (k-1) and building the set of frequent tuples of size k
+
+    A pass consists of:
+        Input:
+            C_k, the set of all candidate k-sets
+        Output:
+            L_k, the set of all frequent k-sets
+
+        The C_k are constructed by taking each frequent k and appending it to every (k-1) set in which k is not present
+
+    After each pass we may want to create a hash-table that re-numbers the sets sequentially, so that they take up less space when stored
+
+Park-Chen-Yu (PCY) Algorithm
+    Takes advantage of the fact that we have a lot of idle memory during the first pass of A-Priori
+
+    We hash all pairs into buckets that do not contain the pairs themselves, just a count.
+        For each basket, enumerate all its pairs, hash them, and increment the resulting bucket count by 1
+    A bucket is frequent if its count is at least equal to the support threshold
+        Afterwards, we convert this large hash table of buckets into a simple bitmap vector that has the
+        key [i, j] to either a 0 or 1, to indictate whether the bucket is frequent.
+
+    On pass 2, then, we ONLY count pairs that hash to frequent buckets!
+
+    We count all pairs {i, j} that meet these conditions:
+        1) Both i and j are frequent items themselves
+        2) The pair {i, j} hashes to a bucket whose bit in the bit vector is 1
+
+    Because the frequent buckets and pairs are scattered all over the place, we have to use the [i, j, c] hash table
+    appraoch for the second pass. This means that we must eliminate 2/3 of the candidate pairs for PCY to beat
+    A-Priori, since otherwise we could use the triangular matrix approach
+
+Multistage Algorithm
+    Further improvement on PCY
+    Key idea: After pass 1 of PCY, we make another pass and rehash with a different hash function
+        When making the second pass, we ONLY increment the bucket with the second hash function
+        if {i, j} hashes to a frequent bucket in the first hash function
+
+        This reduces false positives from hash collisions
+
+    Count only those pairs {i, j} that satisfy these candidate pair conditions:
+        1) Both i and j are frequent items
+        2) Using the first hash function, the pair hashes to a bucket whose bit in the first bit-vector is 1
+        2) Using the second hash function, the pair hashes to a bucket whose bit in the first bit-vector is 1
+
+    Note here that the hash functions need to be independent of each other
+
+Multihash Algorithm
+    Key idea: use several independent hash tables on the first pass
+
+    Each hash table will have to be smaller (fewer buckets), which means that there will be more collisions.
+    However, we will have more tables, so it may be the case that we are able to eliminate far more
+    false positives.
+
+Alternatives that use <=2 passes
+    Simple Algorithm
+        Take a random sample of the market basts, and then just ran a-priori or any of its improvements
+        in main memory, so you don't pay for disk I/O
+
+        Scale back the support threshold accordingly
+
+        Trades accuracy for a huge boost in speed
+
+        Optionally, go back and make a second pass to using the entire dataset to eliminate false positives.
+        This won't help us for false negatives, though.
+
+    Toivonen's Algorithm
+        Starts with the simple algorith, but lowers teh threshold slightly for the sample
+        Calculate the negative border of sets, where a given set {A,B,C,D} is in the negative border iff:
+            1) It is not frequent in the sample
+            2) All of {ABC}, {BCD}, {ACD}, and {ABD} are frequent
+            That is, it is all item sets that are not frequent but the every (k-1)-set in it IS frequent
+
+            (Note: We define the empty set as frequent)
