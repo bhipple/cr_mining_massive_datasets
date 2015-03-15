@@ -441,3 +441,31 @@ Dimensionality Reduction
         for MM' or M'M. In practice we choose between the two M representations based
         on which will be smaller, but it can be proven that they have equivalent eigenvalues
         and the extra eigenvalues of the larger representation are 0s.
+
+
+// ============================================================================
+//                                  Week 5
+// ============================================================================
+Clustering
+    Agglomerative hierarchical clustering
+        Centroid and clustroid for euclidean and non-euclidean spaces in O(N^2 * log(N)) runtime
+    K-Means Clustering
+    BFR
+    CURE - Clustering Using REpresentatives
+
+Bipartite Graph Matching
+    Greedy Algorithm
+
+    Performance-based Advertising and the AdWords Problem
+        Given:
+            As set of bids by advertisers for search queries
+            A click-through rate for each advertiser-query pair
+            A budget for each advertiser
+            A limit on the number of ads to be displayed we each search query
+        Respond to each search query with a set of advertisers such that:
+            The size of the set is no larger than the limit on the number of ads per query
+            Each advertiser has bid on the search query
+            Each advertiser has enough budget left to pay for the ad if it is clicked upon
+
+        BALANCE Algorithm:
+            FOr each query, pick the advertiser with the largest unspent budget
