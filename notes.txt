@@ -290,3 +290,38 @@ Alternatives that use <=2 passes
             That is, it is all item sets that are not frequent but the every (k-1)-set in it IS frequent
 
             (Note: We define the empty set as frequent)
+
+Bloom Filters
+    Consists of:
+    1) An array of n bits, initially all 0's
+    2) A collection of hash functions h_1 to h_k, each of which
+    maps key values to n buckets corresponding to the n values
+    of the bit array
+    3) A set S of m key values
+
+    We then apply each hash function on each key m in S, and
+    set the corresponding bit to 1.
+
+    In the future, when a new candidate is evaluated, if it
+    does not hash to a 1 with every single hash function, then
+    it has NOT been seen before.
+
+    If it does hash to 1, then it has either been seen before
+    or is a false positive.
+
+    Probability of a false positive (key not in S passing all hashes):
+
+    Let m be the number of keys in S, n be the number of bits,
+        k be the number of hash functions. Then:
+        P(bit remains 0) = e^(-km/n)
+
+    If the fraction of 0-bits is too low, then the Bloom filter
+    will not be particularly useful as there will be a large number
+    of false positives let through
+
+    P(false positive) = (1 - e^(-km/n))^k
+
+    That is, it's the probability of randomly getting a 1-bit on each
+    of the k hash functions. Since a false positive doesn't hash to 1
+    on by its own virtue for any hash function, it needs to get lucky
+    every time.
