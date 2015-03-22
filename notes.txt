@@ -469,3 +469,54 @@ Bipartite Graph Matching
 
         BALANCE Algorithm:
             FOr each query, pick the advertiser with the largest unspent budget
+
+
+// ============================================================================
+//                                  Week 6
+// ============================================================================
+Support Vector Machines for Classification
+    For a d-dimensional dataset, there is a set of support vectors with cardinality
+    (d+1) which uniquely defines the hyperplane that maximizes the classification margin
+
+    SVMs with Stochastic Gradient Descent in an Online Learning example
+        We can make a stochastic adjustment whenever a new training example comes in
+
+Decision Trees
+    We build a tree where each node is one of two types:
+    1) Prediction node that predicts a value, or
+    2) Computation node with a function that returns one of its children based on the value of the function on X
+
+    We build the tree recursively by either splitting or classifying:
+        At each split node, we measure how much a given attribute X tells us about the class Y
+        We choose a split that maximizes this information gain:
+            Find a split (X, v) that creates D, D_l, D_r (parent, left, right child datasets)
+            which maximizes:
+            |D| * Var(D) - (|D_l| * Var(D_l) + |D_r| + Var(D|r))
+
+        Intuitively, this means that we try to minimize the variances of the child datasets
+
+        We stop splitting when the parent node is "pure", which could mean either that its
+        variance is below some parameter epsilon, or it could mean that the number of examples
+        in the leaf is small (below some threshold cardinality C)
+
+    In a prediction node, we either predict the most common node from the training set that landed
+    in that node (most common), or we could build a small linear regression classifier that runs
+    within that node (cool idea, but less commonly used)
+
+    We define the entropy of a dataset X's distribution with:
+        H(X) = - sum[from j = 1 to m](p_j * log(p_j))
+            Where m is the total number of options values in X's domain, and
+            p_j is the probability of the dataset having that value j
+
+    High Entropy --> Data is very random
+    Low Entropy --> X has interesting trends in its dataset
+
+    We define the specific conditional entropy as the entropy of Y among only those
+    records in whcih X has a value v, that is, H(Y | X=v)
+
+    IG is the "information gain" function
+        IG(Y|X) = H(Y) - H(Y|X)
+
+        How much is entropy changed if we known X?
+        Tells us how much information of Y is contained in X
+        We want to pick features that have high IG
