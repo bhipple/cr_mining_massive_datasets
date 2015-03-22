@@ -503,3 +503,9 @@ Bipartite Graph Matching
 
         BALANCE Algorithm:
             FOr each query, pick the advertiser with the largest unspent budget
+
+// ============================================================================
+//                                  Week 7
+// ============================================================================
+Generalized Locality Sensitive Hashing
+Random Hyperplanes with cosine distance
