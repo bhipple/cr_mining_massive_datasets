@@ -1,3 +1,6 @@
+// ============================================================================
+//                                  Week 1
+// ============================================================================
 Map Reduce
 ----------
 Map(k, v) -> <k', v'>*
@@ -167,7 +170,9 @@ For signature matrices, we hash columns to many buckets and make elements of the
 First, we pick a simularity threshold t in (0, 1) that describes what fraction of rows need to be the same
 Then, we will hash columns of the signature matrix M several times such that similar columns get similar hash bucket values
 
-
+// ============================================================================
+//                                  Week 3
+// ============================================================================
 Nearest Neighbor Machine Learning
 ---------------------------------
 We need 4 things to make a nearest neighbor classifier:
@@ -325,3 +330,176 @@ Bloom Filters
     of the k hash functions. Since a false positive doesn't hash to 1
     on by its own virtue for any hash function, it needs to get lucky
     every time.
+WEEK 3
+------
+Community Interaction In Graphs
+
+Affiliation Graph Model: A generative model B(V, C, M, {p_c}) for graphs:
+    Nodes V, Communities C, Memberships M
+    Each community c has a single probability p_c
+
+    This model generates the links (edges) in the network graph:
+        For each pair of nodes in community A, we connect them with probability p_a
+        The overall edge probability is P(u,v) = 1 - product (1 - p_c) for all c in M_u intersect M_v,
+        where M_u is the set of communities node u belongs to.
+
+        If u,v share no communities, then P(u,v) = epsilon
+        Intuitively: if at least one community says "YES" to the two candidate nodes u,v, then we create an edge
+        Answers the question: "Given a pair of nodes and the set of communities to which they both belong,
+        how likely are these two nodes to be connected"
+
+    This model has the flexibility to express non-overlapping, overlapping, OR nested graph clusters
+
+AGM -> BigCLAM
+    As a generalization of AGM, let's model F_ua as the membership strength of node u to the community A,
+    where a value of 0 is no membership; this gives more nuance over the binary membership, so:
+
+    The probablity that two nodes u and v are connected given a commuunity A:
+    P_a(u,v) = 1 - exp(-F_ua * F_va)
+
+    We can then define a community membership strength matrix F
+    Every row is a node
+    Every column is a community
+    Every F(v,a) gives the strength of the node v to the community a
+
+    Generalizing the above P(u,v) equation to all communities c:
+    P(u,v) = 1 - product_c(1 - P_c(u, v))
+
+    Generalizing the dot product with vectorization:
+    P(u,v) = 1 - exp(-F_u * F_v')
+
+    Problem statement: Given a network G(V, E), estimate the matrix F
+
+    We write a "likelihood" function that gives the likelihood that the graph
+    G(V, E) was generated from the matrix F.  Our task then is to find a matrix
+    F that maximizes the likelohood function
+
+    [product over u,v in E] p(u,v) * [product over u,v not in E] (1 - p(u,v))
+
+    In order to avoid rounding errors with multiplying many small numbers, we take the log
+    of both sides to convert to addition!
+
+    Find F that maximizes l(F):
+        l(F) = 
+    We want to find an F that maximizes the likelihood:
+
+
+// ============================================================================
+//                                  Week 4
+// ============================================================================
+Recommender Systems
+There are three primary approaches:
+    Content-based
+    Collaborative Filtering
+    Latent factor based
+
+Content-Based Recommendations
+    Recommend items to customer x similar to previous items rated highly by x
+
+    TF-IDF: Term Frequency * Inverse Document Frequency
+        TF_ij = f_ij / (max_k * f_kj)
+        That is, the Term Frequncy of an item i in a document j, divided by the maximum frequency for that term i in any of the documents
+
+        IDF_i = log(N / n_i), where N = the total number of documents, n_i is the nubmer of times i shows up in this document
+
+    Given a user profile x, and an item profile i, we compute the cosine similarity between the x and i vectors
+    The smaller the angle between these vectors, the greater the similarity.
+    We recommend the item with the smallest angle to the user x
+
+    Advantages:
+        Don't need data from other users to make recommendations
+        Able to recommend to users with unique tastes
+        Able to recommend new and unpopular items (no "first-rater problem")
+        We can provide explanations for why something was related by looking at content features
+
+    Disadvantages:
+        Finding the appropriate features is hard and/or labor intensive
+        Overspecialization: never recommends an item outside the user's content profile
+            Fails to capture multiple interests of users
+        Cold-start problem for new users
+
+Collaborative Filtering
+    For a given user x, find set N of other users whose ratings are "similar" to x's ratings,
+    then estimate x's ratings based on ratings of users in N
+
+    Given users x and y with rating vectors r_x, r_y
+    We compute the centered cosing by first normalizing the rows (subtract the mean of r_x from every rated entry),
+    then fill in 0s in the empty slots (items not rated)
+
+    This means that the sum of ratings in any particular row is 0; 0 is the average rating for every user
+
+    Then we compute the similarity between users X and Y using the centered cosine similarity:
+        sim(X, Y) = cos(r_x, r_y)
+    (The centered cosine similarity is also known as the Pearson Correlation)
+
+    We can do user-ser collaborative filtering, or we can do item-item collaborative filtering
+
+    User-user:
+        For a user x and an item i, we predict how x would rate i by looking at a neighborhood of k users most
+        similar to x who have also rated i, and using their rating to generate a rating according to some formula
+
+    Item-item:
+        For an item i, we find similar items to i that x has rated,
+        and estimate its rating based on x's ratings for the similar items
+
+    In theory, these should be similar; but in practice, item-item filtering dramatically outperforms
+    user-user filtering.
+        It turns out that items are inherently "simpler" than users, and are easier to classify into
+        a category. Users tend to be much more varied
+
+        Therefore the notion of item similarity is much more meaningful than the notion of user similarity
+
+Dimensionality Reduction
+    Singular Value Decomposition
+
+    Eigenvalues
+        Let M be a square matrix, let lambda be a constant and e a nonzero column vector
+        with the same number of rows as M. Then lambda is an eigenvalue of M
+        and e is the corresponding eigenvector of M if (M * e = lambda * e)
+
+        In order to avoid infinite eigenvectors scaled by constant factors for each lambda,
+        we insist that the eigenvector be a unit vector whose first nonzero component is positive
+
+        We can find the principal eigenvalue through power iteration:
+        Givem M, random x, repeatedly set:
+        x = M*x / norm(M * x)
+
+        Once this converges, the principal eigenvalue is:
+        lambda = x' * M * x
+
+        Then we can subtract out the principal eigenpair from M to find the next eigenpair
+        M = M - lambda * x * x'
+
+    Principal Component Analysis
+        Given a set of tuples, treat them as a matrix M and find the eigenvectors
+        for MM' or M'M. In practice we choose between the two M representations based
+        on which will be smaller, but it can be proven that they have equivalent eigenvalues
+        and the extra eigenvalues of the larger representation are 0s.
+
+
+// ============================================================================
+//                                  Week 5
+// ============================================================================
+Clustering
+    Agglomerative hierarchical clustering
+        Centroid and clustroid for euclidean and non-euclidean spaces in O(N^2 * log(N)) runtime
+    K-Means Clustering
+    BFR
+    CURE - Clustering Using REpresentatives
+
+Bipartite Graph Matching
+    Greedy Algorithm
+
+    Performance-based Advertising and the AdWords Problem
+        Given:
+            As set of bids by advertisers for search queries
+            A click-through rate for each advertiser-query pair
+            A budget for each advertiser
+            A limit on the number of ads to be displayed we each search query
+        Respond to each search query with a set of advertisers such that:
+            The size of the set is no larger than the limit on the number of ads per query
+            Each advertiser has bid on the search query
+            Each advertiser has enough budget left to pay for the ad if it is clicked upon
+
+        BALANCE Algorithm:
+            FOr each query, pick the advertiser with the largest unspent budget
