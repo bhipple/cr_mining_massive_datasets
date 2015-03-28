@@ -559,3 +559,28 @@ Decision Trees
 // ============================================================================
 Generalized Locality Sensitive Hashing
 Random Hyperplanes with cosine distance
+
+Topic-Specific PageRank
+    We do as before on the PageRank algorith, but for a given topic we
+    create a set of websites relevant to the topic and ONLY do teleports
+    to pages in that set
+
+SimRank
+    Random walks from a fixed node on k-partite graphs
+    That is, do a random walk starting from node u, where the teleport set S = {u}
+    This isn't scalable on a web-scale since it needs to be run from every node, but it
+    gives you scores for how connected any arbitrary node v is to u by looking
+    at the PageRank value!
+
+Hubs-and-Authorities
+    HITS (Hypertext-Induced Topic Selection)
+    Each page gets two scores, with links as votes:
+        Hub - quality as an expect
+            Sum of votes of authorities pointed to
+        Authority - quality as content
+            Sum of votes coming from expert
+
+TrustRank
+    Topic-specific PageRank with a teleport set of trusted web pages
+    This avoids the problem of random teleports shifting importance into massive
+    spam farm clusters
