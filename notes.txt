@@ -580,6 +580,25 @@ Generalized Locality Sensitive Hashing
 
 Random Hyperplanes with cosine distance
 
+Efficient Computation of PageRank
+    Since the transition matrix M is extremely sparse, we want to represent it by its
+    non-zero edges instead of in its full NxN adjacency matrix form
+
+    Source  Degree  Destinations
+    A       3       B, C, D
+    B       2       A, D
+    C       1       A
+    D       2       B, C
+
+    Here we use 4 bytes for each row (degree) + 4 bytes per destination in that row
+
+    In the PageRank formulation, we do many repetitions of:
+    v2 = BMv + (1-B)e/n
+    which is just a matrix vector multiplcation. With the size of the web today,
+    it is likely that even the vector v is too big to fit in memory.
+    We can break M into vertical stripes and v into corresponding horizontal stripes
+    to send portions to MapReduce processes (Section 2.3.1)
+
 Topic-Specific PageRank
     We do as before on the PageRank algorith, but for a given topic we
     create a set of websites relevant to the topic and ONLY do teleports
