@@ -558,12 +558,39 @@ Decision Trees
 //                                  Week 7
 // ============================================================================
 Generalized Locality Sensitive Hashing
+    The family of Minhash functions applied to the Jacard distance are one specific
+    example of a locality sensitive function family
+
+    We can create a family of functions that when applied to a space and a distance metric,
+    1) Are more likely to make close pairs candidate pairs than distant pairs
+    2) Are statistically indepdendent, so we can use the product rule for independent events
+    3) Are efficient, in that they identify candidate pairs faster than O(n^2) and can be
+       combined into functions which are better at avoiding false positives and false negatives
+
+    Given a elements x and y and a function f, we will denote f(x) = f(y) to mean
+    that these elements are considered candidates for comparison (potentially similar)
+
+    Let d1 < d2 be two distances according to some distance measure d. A family F
+    of functions is said to be (d1, d2, p1, p2)-sensitive if for every f in F:
+    1) If d(x,y) < d1, then the probability that f(x)=f(y) is at least p1
+    2) If d(x,y) > d2, then the probability that f(x)=f(y) is at most p2
+
+    We can combine sets of functions f out of F to drive p1 higher and p2 lower through
+    AND / OR combinations, but then for every element we have to compute its values with more functions
+
 Random Hyperplanes with cosine distance
 
 Topic-Specific PageRank
     We do as before on the PageRank algorith, but for a given topic we
     create a set of websites relevant to the topic and ONLY do teleports
     to pages in that set
+
+    Recall that the PageRank formulation was down through repeated iterations of:
+    v = Beta * M * v + (1-beta) * e/n, where e is a vector of all ones and length n
+
+    Now we will generate a topic set S, and set e such e[i] = 1 when i is in S, and 0 otherwise
+    We replace the denominator n with the cardinality of S, |S|
+    v = Beta*M * v + (1-beta) * e / |S|
 
 SimRank
     Random walks from a fixed node on k-partite graphs
@@ -579,6 +606,18 @@ Hubs-and-Authorities
             Sum of votes of authorities pointed to
         Authority - quality as content
             Sum of votes coming from expert
+    We create a link matrix L, such that L(i,j) = 1 if there is a link from page i to page j, and 0 otherwise
+    We use the vector h, such that h(i) denotes the hub score of the ith page
+    Use vector a for the authority score of the ith page
+    Then:
+        h = lambda * L * a
+        a = mu * L' * h
+
+    Note that we use L' for a, since we want to reverse the links to get a sense of its value as an authority
+
+    Algorithm involves repeating:
+        1) Compute a = L' * h, and scale so the largest component is 1 (otherwise we infinitely increase in value)
+        2) Compute h = L * a, and scale again
 
 TrustRank
     Topic-specific PageRank with a teleport set of trusted web pages
